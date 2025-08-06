@@ -1,0 +1,42 @@
+{
+  "entryPoints": ["src/index.ts"],
+  "out": "docs/generated",
+  "theme": "default",
+  "name": "Google ADK TypeScript",
+  "includeVersion": true,
+  "excludePrivate": true,
+  "excludeProtected": false,
+  "excludeExternals": true,
+  "readme": "README.md",
+  "categorizeByGroup": true,
+  "categoryOrder": [
+    "Agents",
+    "Tools",
+    "Models",
+    "Flows",
+    "Memory",
+    "Sessions",
+    "Authentication",
+    "React Native",
+    "Utilities",
+    "*"
+  ],
+  "sort": ["source-order"],
+  "kindSortOrder": [
+    "Class",
+    "Interface",
+    "Type alias",
+    "Variable",
+    "Function",
+    "Accessor",
+    "Method",
+    "Property"
+  ],
+  "navigation": {
+    "includeCategories": true,
+    "includeGroups": true
+  },
+  "plugin": ["typedoc-plugin-markdown"],
+  "gitRevision": "main",
+  "gitRemote": "origin"
+}

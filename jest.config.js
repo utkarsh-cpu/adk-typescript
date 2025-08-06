@@ -1,0 +1,35 @@
+module.exports = {
+  roots: ['<rootDir>/src', '<rootDir>/tests'],
+  testMatch: [
+    '**/__tests__/**/*.+(ts|tsx|js)',
+    '**/*.(test|spec).+(ts|tsx|js)',
+  ],
+  transform: {
+    '^.+\\.(ts|tsx)$': 'ts-jest',
+  },
+  collectCoverageFrom: [
+    'src/**/*.{ts,tsx}',
+    '!src/**/*.d.ts',
+    '!src/**/index.ts',
+  ],
+  coverageDirectory: 'coverage',
+  coverageReporters: ['text', 'lcov', 'html'],
+  setupFilesAfterEnv: ['<rootDir>/tests/setup.ts'],
+  moduleNameMapper: {
+    '^@/(.*)$': '<rootDir>/src/$1',
+    '^@/agents/(.*)$': '<rootDir>/src/agents/$1',
+    '^@/tools/(.*)$': '<rootDir>/src/tools/$1',
+    '^@/models/(.*)$': '<rootDir>/src/models/$1',
+    '^@/flows/(.*)$': '<rootDir>/src/flows/$1',
+    '^@/memory/(.*)$': '<rootDir>/src/memory/$1',
+    '^@/sessions/(.*)$': '<rootDir>/src/sessions/$1',
+    '^@/artifacts/(.*)$': '<rootDir>/src/artifacts/$1',
+    '^@/auth/(.*)$': '<rootDir>/src/auth/$1',
+    '^@/events/(.*)$': '<rootDir>/src/events/$1',
+    '^@/errors/(.*)$': '<rootDir>/src/errors/$1',
+    '^@/utils/(.*)$': '<rootDir>/src/utils/$1',
+    '^@/react-native/(.*)$': '<rootDir>/src/react-native/$1',
+  },
+  testEnvironment: 'jsdom',
+  moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json', 'node'],
+};
