@@ -16,13 +16,16 @@ import { Event } from '../../events/event';
 import { InvocationContext } from '../../agents/invocation-context';
 import { convertA2aPartToGenaiPart, convertGenaiPartToA2aPart } from './part-converter';
 import { getAdkMetadataKey } from './utils';
-import type { 
-  Part, 
-  Message, 
-  Task, 
+import type {
+  Part,
+  Message,
+  Task,
   TaskStatusUpdateEvent,
   TaskArtifactUpdateEvent
 } from '@a2a-js/sdk';
+
+// A2A Event union type matching Python SDK definition
+export type A2AEvent = Message | Task | TaskStatusUpdateEvent | TaskArtifactUpdateEvent;
 
 // Constants
 const ARTIFACT_ID_SEPARATOR = '-';
@@ -347,7 +350,7 @@ function createStatusUpdateEvent(
   let state: 'working' | 'auth-required' | 'input-required' = 'working';
 
   // Check for auth required
-  if (message.parts.some(part => 
+  if (message.parts.some(part =>
     part.kind === 'data' &&
     part.metadata &&
     part.metadata[getAdkMetadataKey(A2A_DATA_PART_METADATA_TYPE_KEY)] === A2A_DATA_PART_METADATA_TYPE_FUNCTION_CALL &&
@@ -389,7 +392,7 @@ export function convertEventToA2aEvents(
   invocationContext: InvocationContext,
   taskId: string = '',
   contextId: string = ''
-): (TaskStatusUpdateEvent | TaskArtifactUpdateEvent)[] {
+): (A2AEvent)[] {
   if (!event) {
     throw new Error('Event cannot be null');
   }

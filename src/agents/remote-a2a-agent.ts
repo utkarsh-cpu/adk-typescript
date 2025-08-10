@@ -69,7 +69,7 @@ export class A2AClientError extends Error {
 }
 
 @experimental
-export class RemoteA2aAgent extends BaseAgent {
+export class RemoteA2AAgent extends BaseAgent {
     private agentCard?: AgentCard;
     private agentCardSource?: string;
     private rpcUrl?: string;

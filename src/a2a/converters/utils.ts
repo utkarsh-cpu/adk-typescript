@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import { tuple } from "zod";
+
 const ADK_METADATA_KEY_PREFIX = 'adk_';
 const ADK_CONTEXT_ID_PREFIX = 'adk';
 const ADK_CONTEXT_ID_SEPARATOR = ':';
@@ -37,9 +39,31 @@ export function getAdkMetadataKey(key: string): string {
  * @returns The A2A context id.
  * @throws Error if any of the input parameters are empty or null.
  */
-export function toA2aContextId(appName: string, userId: string, sessionId: string): string {
+export function toA2AContextId(appName: string, userId: string, sessionId: string): string {
   if (!appName || !userId || !sessionId) {
     throw new Error('All parameters (appName, userId, sessionId) must be non-empty');
   }
   return [ADK_CONTEXT_ID_PREFIX, appName, userId, sessionId].join(ADK_CONTEXT_ID_SEPARATOR);
+}
+
+export function fromA2AContextId(contextId: string | null):[string| null,string| null,string | null]{
+  if (contextId=null){
+    return [null, null, null];
+  }
+  try{
+    const parts = contextId!.split(ADK_CONTEXT_ID_SEPARATOR)
+    if (parts.length != 4){
+      return [null, null, null];
+    }
+    const [prefix, appName, userId, sessionId] = parts;
+    if (prefix === ADK_CONTEXT_ID_PREFIX && 
+      appName.trim() && 
+      userId.trim() && 
+      sessionId.trim()) {
+      return [appName.trim(), userId.trim(), sessionId.trim()];
+    }
+  }catch(error){
+
+  }
+  return [null, null, null];
 }

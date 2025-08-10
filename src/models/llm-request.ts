@@ -3,7 +3,11 @@
  * Based on Python ADK LlmRequest class
  */
 
-import { Content, GenerateContentConfig, LiveConnectConfig, Tool } from '@google/genai';
+import {
+  Content,
+  GenerateContentConfig,
+  LiveConnectConfig,
+} from '@google/genai';
 import { BaseTool } from '@/tools/base-tool';
 
 interface LlmRequestConfig {
@@ -56,12 +60,12 @@ export class LlmRequest {
 
   /**
    * Appends instructions to the system instruction.
-   * 
+   *
    * @param instructions - The instructions to append.
    */
   appendInstructions(instructions: string[]): void {
     if (this.config.systemInstruction) {
-      this.config.systemInstruction += '\n\n' + instructions.join('\n\n');
+      this.config.systemInstruction += `\n\n${instructions.join('\n\n')}`;
     } else {
       this.config.systemInstruction = instructions.join('\n\n');
     }
@@ -69,7 +73,7 @@ export class LlmRequest {
 
   /**
    * Appends tools to the request.
-   * 
+   *
    * @param tools - The tools to append.
    */
   appendTools(tools: BaseTool[]): void {
@@ -103,14 +107,14 @@ export class LlmRequest {
       }
 
       this.config.tools.push({
-        functionDeclarations: declarations
+        functionDeclarations: declarations,
       });
     }
   }
 
   /**
    * Sets the output schema for the request.
-   * 
+   *
    * @param baseModel - The schema/interface to set the output schema to.
    */
   setOutputSchema<T>(baseModel: new () => T): void {

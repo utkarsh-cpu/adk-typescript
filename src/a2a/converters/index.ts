@@ -16,3 +16,6 @@ export * from './part-converter';
 export * from './request-converter';
 export * from './event-converter';
 export * from './utils';
+
+// Re-export the A2AEvent union type for convenience
+export type { A2AEvent } from './event-converter';

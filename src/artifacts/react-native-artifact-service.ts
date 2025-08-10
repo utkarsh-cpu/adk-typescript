@@ -1,2 +1,3 @@
-// TODO: Implement
-export class ReactNativeArtifactService {}
+  export class ReactNativeArtifactService {
+    
+}

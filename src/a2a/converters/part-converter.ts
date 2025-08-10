@@ -14,24 +14,7 @@
 
 import { getAdkMetadataKey } from './utils';
 import type { Part, TextPart, FilePart, DataPart, FileWithUri, FileWithBytes } from '@a2a-js/sdk';
-
-// GenAI types - these would be imported from the GenAI library
-interface GenaiPart {
-  text?: string;
-  fileData?: {
-    fileUri: string;
-    mimeType: string;
-  };
-  inlineData?: {
-    data: Uint8Array;
-    mimeType: string;
-  };
-  functionCall?: any;
-  functionResponse?: any;
-  codeExecutionResult?: any;
-  executableCode?: any;
-  thought?: boolean;
-}
+import type { Part as GenaiPart } from '@google/genai';
 
 // Constants for A2A data part metadata
 const A2A_DATA_PART_METADATA_TYPE_KEY = 'type';
@@ -51,7 +34,8 @@ export function convertA2aPartToGenaiPart(a2aPart: Part): GenaiPart | null {
     const textPart = a2aPart as TextPart;
     const genaiPart: GenaiPart = { text: textPart.text };
     if (textPart.metadata && getAdkMetadataKey('thought') in textPart.metadata) {
-      genaiPart.thought = textPart.metadata[getAdkMetadataKey('thought')];
+      const thoughtValue = textPart.metadata[getAdkMetadataKey('thought')];
+      genaiPart.thought = typeof thoughtValue === 'boolean' ? thoughtValue : undefined;
     }
     return genaiPart;
   }
@@ -61,6 +45,11 @@ export function convertA2aPartToGenaiPart(a2aPart: Part): GenaiPart | null {
     const filePart = a2aPart as FilePart;
     if ('uri' in filePart.file) {
       const fileWithUri = filePart.file as FileWithUri;
+      // Check if uri is defined before creating fileData
+      if (!fileWithUri.uri) {
+        console.warn('FileWithUri has undefined uri, skipping conversion:', a2aPart);
+        return null;
+      }
       return {
         fileData: {
           fileUri: fileWithUri.uri,
@@ -69,16 +58,10 @@ export function convertA2aPartToGenaiPart(a2aPart: Part): GenaiPart | null {
       };
     } else if ('bytes' in filePart.file) {
       const fileWithBytes = filePart.file as FileWithBytes;
-      // Convert base64 string to Uint8Array
-      const binaryString = atob(fileWithBytes.bytes);
-      const bytes = new Uint8Array(binaryString.length);
-      for (let i = 0; i < binaryString.length; i++) {
-        bytes[i] = binaryString.charCodeAt(i);
-      }
-      
+      // The bytes are already base64 encoded, so we can use them directly
       const genaiPart: GenaiPart = {
         inlineData: {
-          data: bytes,
+          data: fileWithBytes.bytes,
           mimeType: fileWithBytes.mimeType || 'application/octet-stream'
         }
       };
@@ -100,7 +83,7 @@ export function convertA2aPartToGenaiPart(a2aPart: Part): GenaiPart | null {
     const dataPart = a2aPart as DataPart;
     if (dataPart.metadata && getAdkMetadataKey(A2A_DATA_PART_METADATA_TYPE_KEY) in dataPart.metadata) {
       const dataType = dataPart.metadata[getAdkMetadataKey(A2A_DATA_PART_METADATA_TYPE_KEY)];
-      
+
       switch (dataType) {
         case A2A_DATA_PART_METADATA_TYPE_FUNCTION_CALL:
           return { functionCall: dataPart.data };
@@ -127,9 +110,9 @@ export function convertA2aPartToGenaiPart(a2aPart: Part): GenaiPart | null {
 export function convertGenaiPartToA2aPart(part: GenaiPart): Part | null {
   // Handle text parts
   if (part.text) {
-    const a2aPart: TextPart = { 
+    const a2aPart: TextPart = {
       kind: 'text',
-      text: part.text 
+      text: part.text
     };
     if (part.thought !== undefined) {
       a2aPart.metadata = { [getAdkMetadataKey('thought')]: part.thought };
@@ -149,17 +132,12 @@ export function convertGenaiPartToA2aPart(part: GenaiPart): Part | null {
   }
 
   // Handle inline data
-  if (part.inlineData) {
-    // Convert Uint8Array to base64 string
-    const bytes = Array.from(part.inlineData.data)
-      .map(byte => String.fromCharCode(byte))
-      .join('');
-    const base64 = btoa(bytes);
-
+  if (part.inlineData && part.inlineData.data) {
+    // The data is already a base64 string, so we can use it directly
     return {
       kind: 'file',
       file: {
-        bytes: base64,
+        bytes: part.inlineData.data,
         mimeType: part.inlineData.mimeType
       } as FileWithBytes
     } as FilePart;

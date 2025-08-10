@@ -20,31 +20,8 @@ import type {
   AgentSkill,
   AgentCard
 } from '@a2a-js/sdk';
-
+import { LlmAgent, SequentialAgent, ParallelAgent, LoopAgent } from '@/agents';
 // Agent type interfaces - these would be imported from agents
-interface LlmAgent extends BaseAgent {
-  instruction?: string;
-  globalInstruction?: string;
-  tools?: any[];
-  planner?: any;
-  codeExecutor?: any;
-  generateContentConfig?: {
-    responseModalities?: string[];
-  };
-  canonicalTools(): Promise<any[]>;
-}
-
-interface SequentialAgent extends BaseAgent {
-  // Sequential agent specific properties
-}
-
-interface ParallelAgent extends BaseAgent {
-  maxIterations?: number;
-}
-
-interface LoopAgent extends BaseAgent {
-  maxIterations?: number;
-}
 
 // Tool interfaces
 interface ExampleTool {
@@ -389,13 +366,19 @@ export class AgentCardBuilder {
 
     // Add instruction (with pronoun replacement) - only for LlmAgent
     if (agent.instruction) {
-      const instruction = this.replacePronouns(agent.instruction);
+      const instructionText = typeof agent.instruction === 'string'
+        ? agent.instruction
+        : agent.instruction.toString();
+      const instruction = this.replacePronouns(instructionText);
       descriptionParts.push(instruction);
     }
 
     // Add global instruction (with pronoun replacement) - only for LlmAgent
     if (agent.globalInstruction) {
-      const globalInstruction = this.replacePronouns(agent.globalInstruction);
+      const globalInstructionText = typeof agent.globalInstruction === 'string'
+        ? agent.globalInstruction
+        : agent.globalInstruction.toString();
+      const globalInstruction = this.replacePronouns(globalInstructionText);
       descriptionParts.push(globalInstruction);
     }
 
@@ -555,7 +538,10 @@ export class AgentCardBuilder {
 
     // If no example_tool found, try to extract examples from instruction
     if (llmAgent.instruction) {
-      return this.extractExamplesFromInstruction(llmAgent.instruction);
+      const instructionText = typeof llmAgent.instruction === 'string'
+        ? llmAgent.instruction
+        : llmAgent.instruction.toString();
+      return this.extractExamplesFromInstruction(instructionText);
     }
 
     return undefined;
@@ -637,9 +623,16 @@ export class AgentCardBuilder {
       return undefined;
     }
 
-    const llmAgent = agent as LlmAgent;
-    if (llmAgent.generateContentConfig?.responseModalities) {
-      return llmAgent.generateContentConfig.responseModalities;
+    
+    if ('generateContentConfig' in agent &&
+      agent.generateContentConfig &&
+      'responseModalities' in agent.generateContentConfig) {
+      const responseModalities = agent.generateContentConfig.responseModalities;
+      // Type check to ensure it's a string array
+      if (Array.isArray(responseModalities) && 
+          responseModalities.every(item => typeof item === 'string')) {
+        return responseModalities as string[];
+      }
     }
 
     return undefined;

@@ -25,7 +25,7 @@ export abstract class BaseLlm {
 
   /**
    * Generates content from the given request.
-   * 
+   *
    * @param llmRequest - The request to send to the LLM
    * @param stream - Whether to do streaming call
    * @returns A generator of LlmResponse objects
@@ -37,11 +37,11 @@ export abstract class BaseLlm {
 
   /**
    * Creates a live connection to the LLM.
-   * 
+   *
    * @param llmRequest - The request to send to the LLM
    * @returns The connection to the LLM
    */
-  public connect(llmRequest: LlmRequest): BaseLlmConnection {
+  public connect(_llmRequest: LlmRequest): BaseLlmConnection {
     throw new Error(`Live connection is not supported for ${this.model}.`);
   }
 
@@ -52,12 +52,16 @@ export abstract class BaseLlm {
     // If no content is provided, append a user content to hint model response
     // using system instruction.
     if (!llmRequest.contents || llmRequest.contents.length === 0) {
-      llmRequest.contents = [{
-        role: 'user',
-        parts: [{
-          text: 'Handle the requests as specified in the System Instruction.'
-        }]
-      }];
+      llmRequest.contents = [
+        {
+          role: 'user',
+          parts: [
+            {
+              text: 'Handle the requests as specified in the System Instruction.',
+            },
+          ],
+        },
+      ];
       return;
     }
 
@@ -67,10 +71,13 @@ export abstract class BaseLlm {
     if (lastContent.role !== 'user') {
       llmRequest.contents.push({
         role: 'user',
-        parts: [{
-          text: 'Continue processing previous requests as instructed. ' +
-                'Exit or provide a summary if no more outputs are needed.'
-        }]
+        parts: [
+          {
+            text:
+              'Continue processing previous requests as instructed. ' +
+              'Exit or provide a summary if no more outputs are needed.',
+          },
+        ],
       });
     }
   }

@@ -3,6 +3,7 @@
  * Based on Python ADK agent config classes
  */
 import { workingInProgress } from "@/utils";
+import { GenerateContentConfig } from "@google/genai";
 /**
  * Code reference config for a variable, a function, or a class
  */
@@ -131,14 +132,14 @@ export class LlmAgentConfig extends BaseAgentConfig {
   afterToolCallbacks?: CodeConfig[];
 
   /** Optional. LlmAgent.generateContentConfig */
-  generateContentConfig?: any; // TODO: Define proper GenerateContentConfig type
+  generateContentConfig?: GenerateContentConfig; // TODO: Define proper GenerateContentConfig type
 }
 
 /**
  * Configuration for SequentialAgent
  */
-export interface SequentialAgentConfig extends BaseAgentConfig {
-  agentClass: 'SequentialAgent';
+export class SequentialAgentConfig extends BaseAgentConfig {
+  agentClass:string = 'SequentialAgent';
 }
 
 /**

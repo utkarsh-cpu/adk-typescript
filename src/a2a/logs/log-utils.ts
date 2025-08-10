@@ -16,14 +16,14 @@
  * Utility functions for structured A2A request and response logging.
  */
 
-import type { 
-  Part, 
-  TextPart, 
-  DataPart, 
-  Message, 
-  Task, 
-  SendMessageRequest, 
-  SendMessageResponse 
+import type {
+  Part,
+  TextPart,
+  DataPart,
+  Message,
+  Task,
+  SendMessageRequest,
+  SendMessageResponse
 } from '@a2a-js/sdk';
 
 // Constants
@@ -63,7 +63,7 @@ function isA2aDataPart(obj: any): obj is DataPart {
  */
 export function buildMessagePartLog(part: Part): string {
   let partContent = '';
-  
+
   if (isA2aTextPart(part)) {
     const text = part.text;
     partContent = `TextPart: ${text.substring(0, 100)}${text.length > 100 ? '...' : ''}`;
@@ -165,23 +165,23 @@ ${optionalSectionsStr}
  */
 export function buildA2aResponseLog(resp: SendMessageResponse): string {
   // Handle error responses
-  if (resp.root.error) {
+  if ('error' in resp) {
     return `
 A2A Response:
 -----------------------------------------------------------
 Type: ERROR
-Error Code: ${resp.root.error.code}
-Error Message: ${resp.root.error.message}
-Error Data: ${resp.root.error.data ? JSON.stringify(resp.root.error.data, null, 2) : 'None'}
+Error Code: ${resp.error.code}
+Error Message: ${resp.error.message}
+Error Data: ${resp.error.data ? JSON.stringify(resp.error.data, null, 2) : 'None'}
 -----------------------------------------------------------
-Response ID: ${resp.root.id}
-JSON-RPC: ${resp.root.jsonrpc}
+Response ID: ${resp.id}
+JSON-RPC: ${resp.jsonrpc}
 -----------------------------------------------------------
 `;
   }
 
   // Handle success responses
-  const result = resp.root.result!;
+  const result = resp.result!;
   const resultType = result.constructor.name;
 
   // Build result details based on type
@@ -316,8 +316,8 @@ ${statusMessageSection}
 History:
 ${historySection}
 -----------------------------------------------------------
-Response ID: ${resp.root.id}
-JSON-RPC: ${resp.root.jsonrpc}
+Response ID: ${resp.id}
+JSON-RPC: ${resp.jsonrpc}
 -----------------------------------------------------------
 `;
 }

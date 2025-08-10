@@ -14,20 +14,10 @@
 
 import { RunConfig } from '../../agents/run-config';
 import { convertA2aPartToGenaiPart } from './part-converter';
+
+import { RequestContext } from '@a2a-js/sdk/dist/server';
 import type { Message } from '@a2a-js/sdk';
-
 // A2A server types - these would be imported from the A2A server library
-interface CallContext {
-  user?: {
-    userName?: string;
-  };
-}
-
-interface RequestContext {
-  contextId: string;
-  callContext?: CallContext;
-  message?: Message;
-}
 
 interface Content {
   role: string;
@@ -41,14 +31,6 @@ interface Content {
  */
 function getUserId(request: RequestContext): string {
   // Get user from call context if available (auth is enabled on a2a server)
-  if (
-    request.callContext &&
-    request.callContext.user &&
-    request.callContext.user.userName
-  ) {
-    return request.callContext.user.userName;
-  }
-
   // Get user from context id
   return `A2A_USER_${request.contextId}`;
 }
@@ -65,7 +47,7 @@ export function convertA2aRequestToAdkRunArgs(request: RequestContext): {
   newMessage: Content;
   runConfig: RunConfig;
 } {
-  if (!request.message) {
+  if (!request.userMessage) {
     throw new Error('Request message cannot be null');
   }
 
@@ -74,7 +56,7 @@ export function convertA2aRequestToAdkRunArgs(request: RequestContext): {
     sessionId: request.contextId,
     newMessage: {
       role: 'user',
-      parts: request.message.parts
+      parts: request.userMessage.parts
         .map(part => convertA2aPartToGenaiPart(part))
         .filter(Boolean)
     },

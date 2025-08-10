@@ -1,14 +1,14 @@
 import { BaseArtifactService } from '../artifacts/base-artifact-service';
-import  {BaseCredentialService} from "@/auth/credential_service/base-credential-service";
-import  { BaseMemoryService } from '../memory/base-memory-service';
-import  { PluginManager } from '../plugins/plugin-manager';
-import  { BaseSessionService, Session } from '@/sessions';
-import  { BaseAgent } from './base-agent';
-import  { ActiveStreamingTool } from './active-streaming-tool';
-import  { LiveRequestQueue } from './live-request-queue';
-import  { RunConfig } from '@/agents';
-import  { TranscriptionEntry } from '@/agents/transcription-entry';
-import  { Content } from '@google/genai';
+import { BaseCredentialService } from '@/auth/credential_service/base-credential-service';
+import { BaseMemoryService } from '../memory/base-memory-service';
+import { PluginManager } from '../plugins/plugin-manager';
+import { BaseSessionService, Session } from '@/sessions';
+import { BaseAgent } from './base-agent';
+import { ActiveStreamingTool } from './active-streaming-tool';
+import { LiveRequestQueue } from './live-request-queue';
+import { RunConfig } from '@/agents';
+import { TranscriptionEntry } from '@/agents/transcription-entry';
+import { Content } from '@google/genai';
 import { v4 as uuidv4 } from 'uuid';
 
 /**
@@ -96,11 +96,11 @@ export class InvocationContext {
   memoryService?: BaseMemoryService;
   credentialService?: BaseCredentialService;
 
-  readonly invocationId: string;
+  invocationId: string;
   branch?: string;
-  readonly agent: BaseAgent;
-  readonly userContent?: Content;
-  readonly session: Session;
+  agent: BaseAgent;
+  userContent?: Content;
+  session: Session;
 
   endInvocation: boolean = false;
 
@@ -114,7 +114,8 @@ export class InvocationContext {
 
   pluginManager: PluginManager = new PluginManager();
 
-  private _invocationCostManager: InvocationCostManager = new InvocationCostManager();
+  private _invocationCostManager: InvocationCostManager =
+    new InvocationCostManager();
 
   constructor(options: {
     artifactService?: BaseArtifactService;
@@ -158,7 +159,9 @@ export class InvocationContext {
    * @throws {LlmCallsLimitExceededError} If number of llm calls made exceed the set threshold.
    */
   incrementLlmCallCount(): void {
-    this._invocationCostManager.incrementAndEnforceLlmCallsLimit(this.runConfig);
+    this._invocationCostManager.incrementAndEnforceLlmCallsLimit(
+      this.runConfig
+    );
   }
 
   get appName(): string {
@@ -174,5 +177,5 @@ export class InvocationContext {
  * Generates a new invocation context ID.
  */
 export function newInvocationContextId(): string {
-  return 'e-' + uuidv4();
+  return `e-${uuidv4()}`;
 }
