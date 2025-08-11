@@ -4,13 +4,29 @@
  */
 
 import { Session } from '../sessions/session';
+import { Content } from '@google/genai';
 
 /**
  * Represents a memory entry
  */
-export interface MemoryEntry {
+export class MemoryEntry {
   // TODO: Define proper MemoryEntry interface
-  [key: string]: any;
+  content: Content;
+  /**The main content of the memory.*/
+  author: string | null = null;
+  /**The author of the memory.*/
+
+  timestamp: string | null = null;
+  
+  constructor(content: Content, author?: string, timestamp?: string) {
+    this.content = content;
+    if (author) {
+      this.author = author;
+    }
+    if (timestamp) {
+      this.timestamp = timestamp;
+    }
+}
 }
 
 /**

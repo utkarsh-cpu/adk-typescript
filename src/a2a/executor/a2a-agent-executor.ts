@@ -12,190 +12,130 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { convertEventToA2aEvents } from '../converters/event-converter';
-import { convertA2aRequestToAdkRunArgs } from '../converters/request-converter';
-import { getAdkMetadataKey } from '../converters/utils';
-import { TaskResultAggregator } from './task-result-aggregator';
-import type { 
-  TaskStatusUpdateEvent, 
-  TaskArtifactUpdateEvent, 
-  Message,
-  Task
-} from '@a2a-js/sdk';
+import {
+  
+  TaskStatusUpdateEvent,
+  TaskArtifactUpdateEvent,
+} from "@a2a-js/sdk";
+import {AgentExecutor,
+  RequestContext,
+  ExecutionEventBus} from "@a2a-js/sdk/dist/server"
+import { convertEventToA2aEvents } from "../converters/event-converter";
+import { convertA2aRequestToAdkRunArgs } from "../converters/request-converter";
+import { getAdkMetadataKey } from "../converters/utils";
+import { TaskResultAggregator } from "./task-result-aggregator";
 
-// A2A server types - these would be imported from the A2A server library
-interface RequestContext {
-  taskId: string;
-  contextId: string;
-  message?: Message;
-  currentTask?: Task;
-}
+// If not on Node 18+, import from 'uuid' instead
+const uuid = typeof crypto !== "undefined" && crypto.randomUUID
+  ? () => crypto.randomUUID()
+  : () => require("uuid").v4();
 
-interface EventQueue {
-  enqueueEvent(event: TaskStatusUpdateEvent | TaskArtifactUpdateEvent): Promise<void>;
-}
-
-// Runner interface - would be imported from runners
-interface Runner {
-  appName: string;
-  sessionService: any;
-  runAsync(args: any): AsyncIterable<any>;
-  newInvocationContext(options: any): any;
-}
-
-/**
- * Configuration for the A2aAgentExecutor.
- */
 export interface A2aAgentExecutorConfig {
-  // Configuration properties would be added here as needed
+  // Add config options as needed
 }
 
-/**
- * An AgentExecutor that runs an ADK Agent against an A2A request and
- * publishes updates to an event queue.
- */
-export class A2aAgentExecutor {
-  private runner: Runner | (() => Runner | Promise<Runner>);
+export class A2aAgentExecutor implements AgentExecutor {
+  private runner: any | (() => any | Promise<any>);
   private config?: A2aAgentExecutorConfig;
-  private resolvedRunner?: Runner;
+  private resolvedRunner?: any;
 
   constructor(options: {
-    runner: Runner | (() => Runner | Promise<Runner>);
+    runner: any | (() => any | Promise<any>);
     config?: A2aAgentExecutorConfig;
   }) {
     this.runner = options.runner;
     this.config = options.config;
   }
 
-  /**
-   * Resolve the runner, handling cases where it's a callable that returns a Runner.
-   */
-  private async resolveRunner(): Promise<Runner> {
-    // If already resolved and cached, return it
-    if (this.resolvedRunner) {
-      return this.resolvedRunner;
-    }
-
-    if (typeof this.runner === 'function') {
-      // Call the function to get the runner
+  private async resolveRunner(): Promise<any> {
+    if (this.resolvedRunner) return this.resolvedRunner;
+    if (typeof this.runner === "function") {
       const result = this.runner();
-
-      // Handle async callables
-      const resolvedRunner = result instanceof Promise ? await result : result;
-
-      // Cache the resolved runner for future calls
-      this.resolvedRunner = resolvedRunner;
-      return resolvedRunner;
-    } else if (this.runner && typeof this.runner === 'object') {
-      // Already a Runner instance
+      this.resolvedRunner = result instanceof Promise ? await result : result;
+      return this.resolvedRunner;
+    } else if (typeof this.runner === "object") {
       this.resolvedRunner = this.runner;
       return this.runner;
     }
-
-    throw new Error(
-      `Runner must be a Runner instance or a callable that returns a Runner, got ${typeof this.runner}`
-    );
+    throw new Error("Runner must be an object or function");
   }
 
-  /**
-   * Cancel the execution.
-   */
-  async cancel(_context: RequestContext, _eventQueue: EventQueue): Promise<void> {
-    // TODO: Implement proper cancellation logic if needed
-    throw new Error('Cancellation is not supported');
+  async cancelTask(_taskId: string, _eventBus: ExecutionEventBus): Promise<void> {
+    // Not implemented (to match Python version)
+    throw new Error("Cancellation is not supported");
   }
 
-  /**
-   * Executes an A2A request and publishes updates to the event queue.
-   * It runs as following:
-   * * Takes the input from the A2A request
-   * * Convert the input to ADK input content, and runs the ADK agent
-   * * Collects output events of the underlying ADK Agent
-   * * Converts the ADK output events into A2A task updates
-   * * Publishes the updates back to A2A server via event queue
-   */
-  async execute(context: RequestContext, eventQueue: EventQueue): Promise<void> {
-    if (!context.message) {
-      throw new Error('A2A request must have a message');
-    }
+  async execute(requestContext: RequestContext, eventBus: ExecutionEventBus): Promise<void> {
+    if (!requestContext.userMessage) throw new Error("A2A request must have a message");
 
-    // For new task, create a task submitted event
-    if (!context.currentTask) {
-      await eventQueue.enqueueEvent({
-        kind: 'status-update',
-        taskId: context.taskId,
-        status: {
-          state: 'submitted',
-          message: context.message,
-          timestamp: new Date().toISOString()
-        },
-        contextId: context.contextId,
-        final: false
-      } as TaskStatusUpdateEvent);
-    }
-
-    // Handle the request and publish updates to the event queue
     try {
-      await this.handleRequest(context, eventQueue);
-    } catch (error) {
-      console.error('Error handling A2A request:', error);
-
-      // Publish failure event
-      try {
-        await eventQueue.enqueueEvent({
-          kind: 'status-update',
-          taskId: context.taskId,
+      // If this is a new task, publish initial submitted event
+      if (!requestContext.task) {
+        eventBus.publish({
+          kind: "status-update",
+          taskId: requestContext.taskId,
           status: {
-            state: 'failed',
+            state: "submitted",
+            message: requestContext.userMessage,
             timestamp: new Date().toISOString(),
-            message: {
-              kind: 'message',
-              messageId: crypto.randomUUID(),
-              role: 'agent',
-              parts: [{ kind: 'text', text: String(error) }]
-            }
           },
-          contextId: context.contextId,
-          final: true
+          contextId: requestContext.contextId,
+          final: false,
         } as TaskStatusUpdateEvent);
-      } catch (enqueueError) {
-        console.error('Failed to publish failure event:', enqueueError);
       }
+
+      await this.handleRequest(requestContext, eventBus);
+    } catch (error) {
+      console.error("Error handling A2A request:", error);
+      eventBus.publish({
+        kind: "status-update",
+        taskId: requestContext.taskId,
+        status: {
+          state: "failed",
+          timestamp: new Date().toISOString(),
+          message: {
+            kind: "message",
+            messageId: uuid(),
+            role: "agent",
+            parts: [{ kind: "text", text: String(error instanceof Error ? error.message : error) }],
+          },
+        },
+        contextId: requestContext.contextId,
+        final: true,
+      } as TaskStatusUpdateEvent);
+    } finally {
+      eventBus.finished();
     }
   }
 
-  private async handleRequest(context: RequestContext, eventQueue: EventQueue): Promise<void> {
-    // Resolve the runner instance
+  private async handleRequest(
+    requestContext: RequestContext,
+    eventBus: ExecutionEventBus
+  ): Promise<void> {
     const runner = await this.resolveRunner();
+    const runArgs = convertA2aRequestToAdkRunArgs(requestContext);
+    const session = await this.prepareSession(requestContext, runArgs, runner);
 
-    // Convert the a2a request to ADK run args
-    const runArgs = convertA2aRequestToAdkRunArgs(context);
-
-    // Ensure the session exists
-    const session = await this.prepareSession(context, runArgs, runner);
-
-    // Create invocation context
     const invocationContext = runner.newInvocationContext({
       session,
       newMessage: runArgs.newMessage,
-      runConfig: runArgs.runConfig
+      runConfig: runArgs.runConfig,
     });
 
-    // Publish the task working event
-    await eventQueue.enqueueEvent({
-      kind: 'status-update',
-      taskId: context.taskId,
+    eventBus.publish({
+      kind: "status-update",
+      taskId: requestContext.taskId,
       status: {
-        state: 'working',
-        timestamp: new Date().toISOString()
+        state: "working",
+        timestamp: new Date().toISOString(),
       },
-      contextId: context.contextId,
+      contextId: requestContext.contextId,
       final: false,
       metadata: {
-        [getAdkMetadataKey('app_name')]: runner.appName,
-        [getAdkMetadataKey('user_id')]: runArgs.userId,
-        [getAdkMetadataKey('session_id')]: runArgs.sessionId
-      }
+        [getAdkMetadataKey("app_name")]: runner.appName,
+        [getAdkMetadataKey("user_id")]: runArgs.userId,
+        [getAdkMetadataKey("session_id")]: runArgs.sessionId,
+      },
     } as TaskStatusUpdateEvent);
 
     const taskResultAggregator = new TaskResultAggregator();
@@ -204,83 +144,78 @@ export class A2aAgentExecutor {
       const a2aEvents = convertEventToA2aEvents(
         adkEvent,
         invocationContext,
-        context.taskId,
-        context.contextId
+        requestContext.taskId,
+        requestContext.contextId
       );
-
       for (const a2aEvent of a2aEvents) {
         taskResultAggregator.processEvent(a2aEvent);
-        await eventQueue.enqueueEvent(a2aEvent);
+        eventBus.publish(a2aEvent);
       }
     }
 
-    // Publish the task result event - this is final
+    // Publish the final event as per protocol
     if (
-      taskResultAggregator.taskStateValue === 'working' &&
-      taskResultAggregator.taskStatusMessageValue &&
-      taskResultAggregator.taskStatusMessageValue.parts
+      taskResultAggregator.taskStateValue === "working" &&
+      taskResultAggregator.taskStatusMessageValue?.parts
     ) {
-      // If task is still working properly, publish the artifact update event as
-      // the final result according to a2a protocol.
-      await eventQueue.enqueueEvent({
-        kind: 'artifact-update',
-        taskId: context.taskId,
+      eventBus.publish({
+        kind: "artifact-update",
+        taskId: requestContext.taskId,
         lastChunk: true,
-        contextId: context.contextId,
+        contextId: requestContext.contextId,
         artifact: {
-          artifactId: crypto.randomUUID(),
-          parts: taskResultAggregator.taskStatusMessageValue.parts
-        }
+          artifactId: uuid(),
+          parts: taskResultAggregator.taskStatusMessageValue.parts,
+        },
       } as TaskArtifactUpdateEvent);
 
-      // Publish the final status update event
-      await eventQueue.enqueueEvent({
-        kind: 'status-update',
-        taskId: context.taskId,
+      eventBus.publish({
+        kind: "status-update",
+        taskId: requestContext.taskId,
         status: {
-          state: 'completed',
-          timestamp: new Date().toISOString()
+          state: "completed",
+          timestamp: new Date().toISOString(),
         },
-        contextId: context.contextId,
-        final: true
+        contextId: requestContext.contextId,
+        final: true,
       } as TaskStatusUpdateEvent);
     } else {
-      await eventQueue.enqueueEvent({
-        kind: 'status-update',
-        taskId: context.taskId,
+      eventBus.publish({
+        kind: "status-update",
+        taskId: requestContext.taskId,
         status: {
           state: taskResultAggregator.taskStateValue,
           timestamp: new Date().toISOString(),
-          message: taskResultAggregator.taskStatusMessageValue || undefined
+          message: taskResultAggregator.taskStatusMessageValue || undefined,
         },
-        contextId: context.contextId,
-        final: true
+        contextId: requestContext.contextId,
+        final: true,
       } as TaskStatusUpdateEvent);
     }
   }
 
-  private async prepareSession(_context: RequestContext, runArgs: any, runner: Runner): Promise<any> {
+  private async prepareSession(
+    _context: RequestContext,
+    runArgs: any,
+    runner: any
+  ): Promise<any> {
     const sessionId = runArgs.sessionId;
     const userId = runArgs.userId;
 
-    // Create a new session if not exists
     let session = await runner.sessionService.getSession({
       appName: runner.appName,
       userId,
-      sessionId
+      sessionId,
     });
-
     if (!session) {
       session = await runner.sessionService.createSession({
         appName: runner.appName,
         userId,
         state: {},
-        sessionId
+        sessionId,
       });
-      // Update run_args with the new session_id
       runArgs.sessionId = session.id;
     }
-
     return session;
   }
 }

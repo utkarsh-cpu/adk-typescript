@@ -712,29 +712,40 @@ export class Runner {
 /**
  * An in-memory Runner for testing and development.
  */
+/**
+ * An in-memory Runner for testing and development.
+ *
+ * This runner uses in-memory implementations for artifact, session, and memory
+ * services, providing a lightweight and self-contained environment for agent execution.
+ *
+ * @deprecated _inMemorySessionService is deprecated. Please don't use it.
+ */
 export class InMemoryRunner extends Runner {
-  private readonly inMemorySessionService: InMemorySessionService;
+  /**
+   * @deprecated Please don't use. The in-memory session service for the runner.
+   */
+  public readonly _inMemorySessionService: InMemorySessionService;
 
   constructor(
     agent: BaseAgent,
-    options: {
+    options?: {
       appName?: string;
       plugins?: BasePlugin[] | null;
-    } = {}
+    }
   ) {
-    const { appName = 'InMemoryRunner', plugins = null } = options;
-
     const inMemorySessionService = new InMemorySessionService();
-
+    const appName = options?.appName ?? 'InMemoryRunner';
+    const plugins = options?.plugins ?? null;
     super({
       appName,
       agent,
-      artifactService: new InMemoryArtifactService(),
+      artifactService: new InMemoryArtifactService(new Map()),
       plugins,
       sessionService: inMemorySessionService,
       memoryService: new InMemoryMemoryService(),
+      credentialService: null,
     });
-
-    this.inMemorySessionService = inMemorySessionService;
+    this._inMemorySessionService = inMemorySessionService;
+  
   }
 }

@@ -121,7 +121,7 @@ export function createOAuth2SessionTuple(
     authScheme: AuthScheme,
     authCredential: AuthCredential
 ): [OAuth2Client | null, string | null] {
-    const result = createOAuth2Session(authScheme, authCredential);
+    const result = _createOAuth2Session(authScheme, authCredential);
     return [result.client, result.tokenEndpoint];
 }
 

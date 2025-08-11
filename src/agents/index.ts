@@ -13,3 +13,5 @@ export * from '@/agents/callback-context';
 export * from '@/agents/invocation-context';
 export * from '@/agents/run-config';
 export * from '@/agents/live-request-queue'
+export * from "@/agents/read-only-context"
+export * from "@/agents/transcription-entry"

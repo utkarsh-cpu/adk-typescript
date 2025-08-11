@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { Event } from '../../events/event';
+import {AgentExecutionEvent as Event } from '@a2a-js/sdk/dist/server';
 import type { TaskState, Message, TaskStatusUpdateEvent } from '@a2a-js/sdk';
 
 /**

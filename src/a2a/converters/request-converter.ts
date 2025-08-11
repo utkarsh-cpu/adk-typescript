@@ -17,12 +17,8 @@ import { convertA2aPartToGenaiPart } from './part-converter';
 
 import { RequestContext } from '@a2a-js/sdk/dist/server';
 import type { Message } from '@a2a-js/sdk';
+import { Content } from '@google/genai';
 // A2A server types - these would be imported from the A2A server library
-
-interface Content {
-  role: string;
-  parts: any[];
-}
 
 /**
  * Gets the user ID from the request context.
@@ -58,7 +54,7 @@ export function convertA2aRequestToAdkRunArgs(request: RequestContext): {
       role: 'user',
       parts: request.userMessage.parts
         .map(part => convertA2aPartToGenaiPart(part))
-        .filter(Boolean)
+        .filter((part): part is NonNullable<typeof part> => part !== null)
     },
     runConfig: new RunConfig()
   };
