@@ -156,6 +156,6 @@ This project is licensed under the Apache License 2.0 - see the [LICENSE](../LIC
 
 ## Support
 
-- [GitHub Issues](https://github.com/google/agent-development-kit/issues)
+- [GitHub Issues](https://github.com/utkarsh-cpu/adk-typescript/issues)
 - [Documentation](./docs/)
-- [Python ADK Reference](../README.md)
+- [Python ADK Reference](https://github.com/google/adk-python)
