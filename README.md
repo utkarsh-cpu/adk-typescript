@@ -1,3 +1,6 @@
+# IN BUILDING STAGE, MOST OF THE FUNCTIONALITY IS PORT NOW FROM PYTHON, BUT REACT NATIVE COMPONENTS ARE IN STILL NEEDED TO BE WORKED ON
+
+
 # Google Agent Development Kit (ADK) - TypeScript/React Native
 
 A comprehensive TypeScript implementation of Google's Agent Development Kit, specifically optimized for React Native applications. This library provides all the core functionality of the Google ADK Python SDK with mobile-specific optimizations, React Native integration, and enhanced developer experience through TypeScript's type system.
