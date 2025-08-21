@@ -1,13 +1,13 @@
 # Google Agent Development Kit (ADK) - TypeScript/React Native
 
-A comprehensive TypeScript implementation of Google's Agent Development Kit, specifically optimized for React Native applications. This library provides all the core functionality of the Python ADK with mobile-specific optimizations, React Native integration, and enhanced developer experience through TypeScript's type system.
+A comprehensive TypeScript implementation of Google's Agent Development Kit, specifically optimized for React Native applications. This library provides all the core functionality of the Google ADK Python SDK with mobile-specific optimizations, React Native integration, and enhanced developer experience through TypeScript's type system.
 
 ## Features
 
 - 🤖 **Complete Agent System**: BaseAgent, LlmAgent, SequentialAgent, ParallelAgent, LoopAgent
 - 🛠️ **Rich Tool Ecosystem**: Built-in tools plus React Native-specific device integration tools
 - 🧠 **Multi-LLM Support**: Gemini, OpenAI, Anthropic, and more with unified API
-- 📱 **React Native Optimized**: Mobile-first design with React hooks and components
+- 📱 **React Native Optimized**: Mobile-first design with React hooks and components ##( in working not yet done )
 - 🔐 **Secure Authentication**: OAuth2, biometric authentication, secure credential storage
 - 💾 **Comprehensive Memory**: Session management, memory services, and artifact handling
 - 🎯 **Type Safe**: Full TypeScript support with comprehensive type definitions
@@ -50,7 +50,7 @@ const response = await agent.runAsync({
   message: 'Hello, how can you help me?',
 });
 ```
-
+### NOT YET IMPLEMENTED
 ### React Native Integration
 
 ```tsx
@@ -73,7 +73,7 @@ export function MyApp() {
   );
 }
 ```
-
+### NOT YET IMPLEMENTED
 ### Using Device Tools
 
 ```typescript
@@ -104,7 +104,7 @@ The TypeScript ADK follows a modular architecture that mirrors the Python implem
 ├── react-native/    # React Native specific components
 └── utils/           # Utility functions
 ```
-
+## TO BE BUILT
 ## Documentation
 
 - [API Documentation](./docs/api/README.md)
@@ -133,7 +133,7 @@ npm run test:coverage
 npm run lint
 npm run format
 ```
-
+# WILL BE IMPLEMENTED
 ## Examples
 
 Check out the [examples directory](./examples/) for complete React Native applications demonstrating various ADK features:
