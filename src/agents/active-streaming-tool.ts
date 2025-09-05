@@ -1,7 +1,7 @@
 import { LiveRequestQueue } from './live-request-queue';
 
 // Type for cancellable tasks
-interface CancellableTask<T = any> {
+interface CancellableTask<T> {
   promise: Promise<T>;
   cancel: () => void;
   cancelled: boolean;
@@ -31,9 +31,13 @@ export class ActiveStreamingTool {
 
   private validateNoExtraFields(data: any): void {
     const allowedFields = ['task', 'stream'];
-    const extraFields = Object.keys(data).filter(key => !allowedFields.includes(key));
+    const extraFields = Object.keys(data).filter(
+      (key) => !allowedFields.includes(key)
+    );
     if (extraFields.length > 0) {
-      throw new Error(`Extra fields not allowed in ActiveStreamingTool: ${extraFields.join(', ')}`);
+      throw new Error(
+        `Extra fields not allowed in ActiveStreamingTool: ${extraFields.join(', ')}`
+      );
     }
   }
 
@@ -44,7 +48,7 @@ export class ActiveStreamingTool {
     this.task = {
       promise: taskPromise,
       cancel: cancelFn || (() => console.warn('No cancel function provided')),
-      cancelled: false
+      cancelled: false,
     };
   }
 

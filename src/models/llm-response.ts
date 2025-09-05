@@ -3,12 +3,15 @@
  * Based on Python ADK LlmResponse class
  */
 
-import {GroundingMetadata,GenerateContentResponseUsageMetadata,GenerateContentResponse,Content} from "@google/genai"
+import {
+  GroundingMetadata,
+  GenerateContentResponseUsageMetadata,
+  GenerateContentResponse,
+  Content,
+} from '@google/genai';
 
-
-
-export class LlmResponse{
-  /** LLM response class that provides the first candidate response from the 
+export class LlmResponse {
+  /** LLM response class that provides the first candidate response from the
 
   model if available. Otherwise, returns error code and message.
 
@@ -26,25 +29,23 @@ export class LlmResponse{
     custom_metadata: The custom metadata of the LlmResponse.
   """
   **/
-  
 
-
-  content?:Content;
+  content?: Content;
 
   groundingMetadata?: GroundingMetadata;
- 
-  partial?: boolean
- 
-  turnComplete? :boolean
-  
-  errorCode? :string
 
-  errorMessage? :string 
-  interrupted? :boolean
-  
-  customMetadata?:Record<string, any>
-  
-  usageMetadata? :GenerateContentResponseUsageMetadata
+  partial?: boolean;
+
+  turnComplete?: boolean;
+
+  errorCode?: string;
+
+  errorMessage?: string;
+  interrupted?: boolean;
+
+  customMetadata?: Record<string, any>;
+
+  usageMetadata?: GenerateContentResponseUsageMetadata;
   constructor(data?: Partial<LlmResponse>) {
     if (data) {
       // Handle alias mapping for backward compatibility
@@ -55,12 +56,12 @@ export class LlmResponse{
   }
   private mapAliases(data: any): any {
     const aliasMap: Record<string, string> = {
-      'grounding_metadata': 'groundingMetadata',
-      'turn_complete': 'turnComplete',
-      'error_code': 'errorCode',
-      'error_message': 'errorMessage',
-      'custom_metadata': 'customMetadata',
-      'usage_metadata': 'usageMetadata',
+      grounding_metadata: 'groundingMetadata',
+      turn_complete: 'turnComplete',
+      error_code: 'errorCode',
+      error_message: 'errorMessage',
+      custom_metadata: 'customMetadata',
+      usage_metadata: 'usageMetadata',
     };
 
     const mapped: any = {};
@@ -73,57 +74,60 @@ export class LlmResponse{
 
   private validateNoExtraFields(data: any): void {
     const allowedFields = [
-      'content', 'groundingMetadata', 'partial', 'turnComplete',
-      'errorCode', 'errorMessage', 'interrupted', 'customMetadata', 'usageMetadata'
+      'content',
+      'groundingMetadata',
+      'partial',
+      'turnComplete',
+      'errorCode',
+      'errorMessage',
+      'interrupted',
+      'customMetadata',
+      'usageMetadata',
     ];
-    
-    const extraFields = Object.keys(data).filter(key => !allowedFields.includes(key));
+
+    const extraFields = Object.keys(data).filter(
+      (key) => !allowedFields.includes(key)
+    );
     if (extraFields.length > 0) {
       throw new Error(`Extra fields not allowed: ${extraFields.join(', ')}`);
     }
   }
 
-  
-  static create(
-      generateContentResponse: GenerateContentResponse,
-  ): LlmResponse{
-    
+  static create(generateContentResponse: GenerateContentResponse): LlmResponse {
     const usageMetadata = generateContentResponse.usageMetadata;
-    if (generateContentResponse.candidates &&
+    if (
+      generateContentResponse.candidates &&
       generateContentResponse.candidates.length > 0
-    ){
+    ) {
       const candidate = generateContentResponse.candidates[0];
       if (candidate.content && candidate.content.parts) {
         return new LlmResponse({
           content: candidate.content,
           groundingMetadata: candidate.groundingMetadata,
-          usageMetadata: usageMetadata,
+          usageMetadata,
         });
       } else {
         return new LlmResponse({
           errorCode: candidate.finishReason,
           errorMessage: candidate.finishMessage,
-          usageMetadata: usageMetadata,
+          usageMetadata,
         });
       }
-    }
-    else{
+    } else {
       if (generateContentResponse.promptFeedback) {
         const promptFeedback = generateContentResponse.promptFeedback;
         return new LlmResponse({
           errorCode: promptFeedback.blockReason,
           errorMessage: promptFeedback.blockReasonMessage,
-          usageMetadata: usageMetadata,
+          usageMetadata,
         });
-      }
-      else{
+      } else {
         return new LlmResponse({
           errorCode: 'UNKNOWN_ERROR',
           errorMessage: 'Unknown error.',
-          usageMetadata: usageMetadata,
+          usageMetadata,
         });
-      }  
+      }
     }
   }
 }
-  

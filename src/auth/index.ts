@@ -8,5 +8,3 @@ export * from './auth-schemes';
 export * from './auth-tool';
 export * from './credential-manager';
 export * from './oauth2-credential-util';
-export * from './react-native';
-

@@ -9,7 +9,12 @@ import * as path from 'path';
 // import * as yaml from 'js-yaml';
 import { workingInProgress } from '@/utils/feature-decorator';
 import { BaseAgent } from '@/agents/base-agent';
-import { BaseAgentConfig, AgentConfig, AgentRefConfig, CodeConfig } from '@/agents/configs';
+import {
+  BaseAgentConfig,
+  AgentConfig,
+  AgentRefConfig,
+  CodeConfig,
+} from '@/agents/configs';
 
 /**
  * Load an agent's configuration from a YAML file.
@@ -17,7 +22,9 @@ import { BaseAgentConfig, AgentConfig, AgentRefConfig, CodeConfig } from '@/agen
  * @returns The loaded and validated AgentConfig object.
  * @throws {Error} If config file doesn't exist or has invalid YAML.
  */
-const loadConfigFromPath = workingInProgress('loadConfigFromPath is not ready for use.')(function loadConfigFromPath(configPath: string): AgentConfig {
+const loadConfigFromPath = workingInProgress(
+  'loadConfigFromPath is not ready for use.'
+)(function loadConfigFromPath(configPath: string): AgentConfig {
   if (!fs.existsSync(configPath)) {
     throw new Error(`Config file not found: ${configPath}`);
   }
@@ -36,16 +43,18 @@ const loadConfigFromPath = workingInProgress('loadConfigFromPath is not ready fo
     return configData as AgentConfig;
   } catch (error) {
     if (error instanceof Error) {
-      throw new Error(`Failed to load config from ${configPath}: ${error.message}`);
+      throw new Error(
+        `Failed to load config from ${configPath}: ${error.message}`
+      );
     }
     throw error;
   }
 }) as (configPath: string) => AgentConfig;
 
-
-
 // Agent class registry - this would be populated by importing the actual agent classes
-const AGENT_CLASS_REGISTRY: { [key: string]: (new (options: any) => BaseAgent) & typeof BaseAgent } = {};
+const AGENT_CLASS_REGISTRY: {
+  [key: string]: (new (options: any) => BaseAgent) & typeof BaseAgent;
+} = {};
 
 /**
  * Register an agent class in the registry.
@@ -54,7 +63,7 @@ const AGENT_CLASS_REGISTRY: { [key: string]: (new (options: any) => BaseAgent) &
  * @param agentClass The actual agent class constructor
  */
 export function registerAgentClass(
-  className: string, 
+  className: string,
   agentClass: (new (options: any) => BaseAgent) & typeof BaseAgent
 ): void {
   AGENT_CLASS_REGISTRY[className] = agentClass;
@@ -66,7 +75,9 @@ export function registerAgentClass(
  * @returns The resolved agent class.
  * @throws {Error} If the agent class is invalid or not a subclass of BaseAgent.
  */
-function resolveAgentClass(agentClassName?: string): (new (options: any) => BaseAgent) & typeof BaseAgent {
+function resolveAgentClass(
+  agentClassName?: string
+): (new (options: any) => BaseAgent) & typeof BaseAgent {
   const className = agentClassName || 'LlmAgent';
 
   // First try the registry for built-in agent classes
@@ -77,9 +88,11 @@ function resolveAgentClass(agentClassName?: string): (new (options: any) => Base
   // For fully qualified names, try the module resolution
   if (className.includes('.')) {
     const agentClass = resolveFullyQualifiedName(className);
-    
-    if (typeof agentClass === 'function' &&
-        agentClass.prototype instanceof BaseAgent) {
+
+    if (
+      typeof agentClass === 'function' &&
+      agentClass.prototype instanceof BaseAgent
+    ) {
       return agentClass as (new (options: any) => BaseAgent) & typeof BaseAgent;
     }
   }
@@ -95,25 +108,25 @@ function resolveAgentClass(agentClassName?: string): (new (options: any) => Base
  * @returns The created agent instance.
  * @throws {Error} If config file doesn't exist, has invalid YAML, or agent type is unsupported.
  */
-export const fromConfig = workingInProgress('fromConfig is not ready for use.')(function fromConfig(configPath: string): BaseAgent {
-  const absPath = path.resolve(configPath);
-  const config = loadConfigFromPath(absPath);
-  const agentConfig = config;
+export const fromConfig = workingInProgress('fromConfig is not ready for use.')(
+  function fromConfig(configPath: string): BaseAgent {
+    const absPath = path.resolve(configPath);
+    const config = loadConfigFromPath(absPath);
+    const agentConfig = config;
 
-  // Check if this is a base agent config that needs resolution
-  if (agentConfig.constructor === BaseAgentConfig) {
-    // Resolve the concrete agent config for user-defined agent classes
-    const agentClass = resolveAgentClass(agentConfig.agentClass);
-    const validatedConfig = new (agentClass.configType as any)(agentConfig);
-    return agentClass.fromConfig(validatedConfig, absPath);
-  } else {
-    // For built-in agent classes, no need to re-validate
-    const agentClass = resolveAgentClass(agentConfig.agentClass);
-    return agentClass.fromConfig(agentConfig, absPath);
+    // Check if this is a base agent config that needs resolution
+    if (agentConfig.constructor === BaseAgentConfig) {
+      // Resolve the concrete agent config for user-defined agent classes
+      const agentClass = resolveAgentClass(agentConfig.agentClass);
+      const validatedConfig = new (agentClass.configType as any)(agentConfig);
+      return agentClass.fromConfig(validatedConfig, absPath);
+    } else {
+      // For built-in agent classes, no need to re-validate
+      const agentClass = resolveAgentClass(agentConfig.agentClass);
+      return agentClass.fromConfig(agentConfig, absPath);
+    }
   }
-}) as (configPath: string) => BaseAgent;
-
-
+) as (configPath: string) => BaseAgent;
 
 /**
  * Resolve a fully qualified name to an actual object/class.
@@ -121,7 +134,9 @@ export const fromConfig = workingInProgress('fromConfig is not ready for use.')(
  * @returns The resolved object/class.
  * @throws {Error} If the name cannot be resolved.
  */
-const resolveFullyQualifiedName = workingInProgress('resolveFullyQualifiedName is not ready for use.')(function resolveFullyQualifiedName(name: string): any {
+const resolveFullyQualifiedName = workingInProgress(
+  'resolveFullyQualifiedName is not ready for use.'
+)(function resolveFullyQualifiedName(name: string): any {
   try {
     // In TypeScript/JavaScript, we need to handle module resolution differently
     // This is a simplified implementation - in practice, you'd need a proper
@@ -137,7 +152,9 @@ const resolveFullyQualifiedName = workingInProgress('resolveFullyQualifiedName i
     throw new Error(`Module resolution not implemented for: ${name}`);
   } catch (error) {
     if (error instanceof Error) {
-      throw new Error(`Invalid fully qualified name: ${name} - ${error.message}`);
+      throw new Error(
+        `Invalid fully qualified name: ${name} - ${error.message}`
+      );
     }
     throw new Error(`Invalid fully qualified name: ${name}`);
   }
@@ -150,7 +167,9 @@ const resolveFullyQualifiedName = workingInProgress('resolveFullyQualifiedName i
  * @returns The created agent instance.
  * @throws {Error} If the reference cannot be resolved.
  */
-export const resolveAgentReference = workingInProgress('resolveAgentReference is not ready for use.')(function resolveAgentReference(
+export const resolveAgentReference = workingInProgress(
+  'resolveAgentReference is not ready for use.'
+)(function resolveAgentReference(
   refConfig: AgentRefConfig,
   referencingAgentConfigAbsPath: string
 ): BaseAgent {
@@ -171,7 +190,10 @@ export const resolveAgentReference = workingInProgress('resolveAgentReference is
   } else {
     throw new Error("AgentRefConfig must have either 'path' or 'config'");
   }
-}) as (refConfig: AgentRefConfig, referencingAgentConfigAbsPath: string) => BaseAgent;
+}) as (
+  refConfig: AgentRefConfig,
+  referencingAgentConfigAbsPath: string
+) => BaseAgent;
 
 /**
  * Resolve a code reference to an actual agent instance.
@@ -179,7 +201,9 @@ export const resolveAgentReference = workingInProgress('resolveAgentReference is
  * @returns The resolved agent instance.
  * @throws {Error} If the agent reference cannot be resolved.
  */
-const resolveAgentCodeReference = workingInProgress('resolveAgentCodeReference is not ready for use.')(function resolveAgentCodeReference(code: string): BaseAgent {
+const resolveAgentCodeReference = workingInProgress(
+  'resolveAgentCodeReference is not ready for use.'
+)(function resolveAgentCodeReference(code: string): BaseAgent {
   if (!code.includes('.')) {
     throw new Error(`Invalid code reference: ${code}`);
   }
@@ -197,13 +221,17 @@ const resolveAgentCodeReference = workingInProgress('resolveAgentCodeReference i
     }
 
     if (!(obj instanceof BaseAgent)) {
-      throw new Error(`Invalid agent reference to a non-agent instance: ${code}`);
+      throw new Error(
+        `Invalid agent reference to a non-agent instance: ${code}`
+      );
     }
 
     return obj;
   } catch (error) {
     if (error instanceof Error) {
-      throw new Error(`Failed to resolve agent code reference: ${code} - ${error.message}`);
+      throw new Error(
+        `Failed to resolve agent code reference: ${code} - ${error.message}`
+      );
     }
     throw error;
   }
@@ -215,7 +243,9 @@ const resolveAgentCodeReference = workingInProgress('resolveAgentCodeReference i
  * @returns The resolved object.
  * @throws {Error} If the code reference cannot be resolved.
  */
-export const resolveCodeReference = workingInProgress('resolveCodeReference is not ready for use.')(function resolveCodeReference(codeConfig: CodeConfig): any {
+export const resolveCodeReference = workingInProgress(
+  'resolveCodeReference is not ready for use.'
+)(function resolveCodeReference(codeConfig: CodeConfig): any {
   if (!codeConfig || !codeConfig.name) {
     throw new Error('Invalid CodeConfig.');
   }
@@ -247,7 +277,9 @@ export const resolveCodeReference = workingInProgress('resolveCodeReference is n
     }
   } catch (error) {
     if (error instanceof Error) {
-      throw new Error(`Failed to resolve code reference: ${codeConfig.name} - ${error.message}`);
+      throw new Error(
+        `Failed to resolve code reference: ${codeConfig.name} - ${error.message}`
+      );
     }
     throw error;
   }
@@ -258,8 +290,10 @@ export const resolveCodeReference = workingInProgress('resolveCodeReference is n
  * @param callbacksConfig List of callback configurations.
  * @returns List of resolved callback objects.
  */
-export const resolveCallbacks = workingInProgress('resolveCallbacks is not ready for use.')(function resolveCallbacks(callbacksConfig: CodeConfig[]): any[] {
-  return callbacksConfig.map(config => resolveCodeReference(config));
+export const resolveCallbacks = workingInProgress(
+  'resolveCallbacks is not ready for use.'
+)(function resolveCallbacks(callbacksConfig: CodeConfig[]): any[] {
+  return callbacksConfig.map((config) => resolveCodeReference(config));
 }) as (callbacksConfig: CodeConfig[]) => any[];
 
 // TODO: Initialize the agent registry with available agent classes
